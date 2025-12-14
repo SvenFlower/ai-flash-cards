@@ -24,7 +24,7 @@ describe('FlashCard Component', () => {
         );
 
         expect(screen.getByText('What is React?')).toBeDefined();
-        expect(screen.getByText('Przód')).toBeDefined();
+        expect(screen.getAllByText('Przód')).toHaveLength(2); // Label and badge
     });
 
     it('should flip to show back when clicked', () => {
@@ -39,7 +39,7 @@ describe('FlashCard Component', () => {
         const cardBody = screen.getByText('What is React?').closest('.relative');
         fireEvent.click(cardBody!);
 
-        expect(screen.getByText('Tył')).toBeDefined();
+        expect(screen.getAllByText('Tył')).toHaveLength(2); // Label and badge
     });
 
     it('should call onReject when reject button is clicked', () => {
