@@ -94,8 +94,8 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     const customSessionName = `E2E Test Session ${Date.now()}`;
     await sessionNameInput.fill(customSessionName);
 
-    // Step 16: Save session
-    await page.getByRole('button', { name: /Zapisz/i }).click();
+    // Step 16: Save session (use plain string with exact match, not regex)
+    await page.getByRole('button', { name: 'Zapisz', exact: true }).click();
 
     // Step 17: Navigate to sessions page
     await page.getByRole('link', { name: /sesje/i }).click();
