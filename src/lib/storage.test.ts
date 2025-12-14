@@ -1,206 +1,299 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  saveFlashCard,
-  getFlashCards,
-  deleteFlashCard,
-  updateFlashCard,
+    saveFlashCard,
+    getFlashCards,
+    deleteFlashCard,
+    updateFlashCard,
+    createSession,
+    getSessions,
+    getSessionWithFlashCards,
+    saveFlashCardsToSession,
 } from './storage';
-import type { FlashCard } from './types';
+import { supabaseClient } from '../db/supabase.client';
 
-describe('Storage', () => {
-  beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
-  });
+// Mock Supabase client
+vi.mock('../db/supabase.client', () => ({
+    supabaseClient: {
+        auth: {
+            getUser: vi.fn(),
+        },
+        from: vi.fn(),
+    },
+}));
 
-  describe('saveFlashCard', () => {
-    it('should save a new flashcard to localStorage', () => {
-      const card = { front: 'Question', back: 'Answer' };
-      const savedCard = saveFlashCard(card);
+describe('Storage utilities', () => {
+    const mockUserId = 'user-123';
+    const mockUser = { id: mockUserId, email: 'test@example.com' };
 
-      expect(savedCard).toHaveProperty('id');
-      expect(savedCard).toHaveProperty('createdAt');
-      expect(savedCard.front).toBe('Question');
-      expect(savedCard.back).toBe('Answer');
-      expect(typeof savedCard.id).toBe('string');
-      expect(savedCard.id.length).toBeGreaterThan(0);
+    beforeEach(() => {
+        vi.clearAllMocks();
+        // Default: user is authenticated
+        vi.mocked(supabaseClient.auth.getUser).mockResolvedValue({
+            data: { user: mockUser },
+            error: null,
+        });
     });
 
-    it('should save multiple flashcards', () => {
-      const card1 = saveFlashCard({ front: 'Q1', back: 'A1' });
-      const card2 = saveFlashCard({ front: 'Q2', back: 'A2' });
+    describe('saveFlashCard', () => {
+        it('should save a flashcard when user is authenticated', async () => {
+            const mockFlashCard = {
+                id: 'fc-123',
+                front: 'Question',
+                back: 'Answer',
+                created_at: '2024-01-01',
+                session_id: null,
+                user_id: mockUserId,
+            };
 
-      const cards = getFlashCards();
-      expect(cards).toHaveLength(2);
-      expect(cards[0].id).toBe(card1.id);
-      expect(cards[1].id).toBe(card2.id);
+            const insertMock = vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({
+                        data: mockFlashCard,
+                        error: null,
+                    }),
+                }),
+            });
+
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                insert: insertMock,
+            } as any);
+
+            const result = await saveFlashCard({ front: 'Question', back: 'Answer' });
+
+            expect(result).toEqual({
+                id: 'fc-123',
+                front: 'Question',
+                back: 'Answer',
+                createdAt: '2024-01-01',
+                sessionId: null,
+            });
+            expect(insertMock).toHaveBeenCalledWith({
+                front: 'Question',
+                back: 'Answer',
+                session_id: undefined,
+                user_id: mockUserId,
+            });
+        });
+
+        it('should throw error when user is not authenticated', async () => {
+            vi.mocked(supabaseClient.auth.getUser).mockResolvedValue({
+                data: { user: null },
+                error: null,
+            });
+
+            await expect(
+                saveFlashCard({ front: 'Question', back: 'Answer' }),
+            ).rejects.toThrow('Musisz być zalogowany, aby zapisać fiszkę');
+        });
     });
 
-    it('should generate unique IDs for each flashcard', () => {
-      const card1 = saveFlashCard({ front: 'Q1', back: 'A1' });
-      const card2 = saveFlashCard({ front: 'Q2', back: 'A2' });
+    describe('getFlashCards', () => {
+        it('should return flashcards for authenticated user', async () => {
+            const mockFlashCards = [
+                {
+                    id: 'fc-1',
+                    front: 'Q1',
+                    back: 'A1',
+                    created_at: '2024-01-01',
+                    session_id: null,
+                    user_id: mockUserId,
+                },
+            ];
 
-      expect(card1.id).not.toBe(card2.id);
+            const orderMock = vi.fn().mockResolvedValue({
+                data: mockFlashCards,
+                error: null,
+            });
+
+            const eqMock = vi.fn().mockReturnValue({ order: orderMock });
+            const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
+
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                select: selectMock,
+            } as any);
+
+            const result = await getFlashCards();
+
+            expect(result).toHaveLength(1);
+            expect(result[0].front).toBe('Q1');
+            expect(eqMock).toHaveBeenCalledWith('user_id', mockUserId);
+        });
+
+        it('should return empty array when user is not authenticated', async () => {
+            vi.mocked(supabaseClient.auth.getUser).mockResolvedValue({
+                data: { user: null },
+                error: null,
+            });
+
+            const result = await getFlashCards();
+
+            expect(result).toEqual([]);
+        });
     });
 
-    it('should set createdAt timestamp', () => {
-      const before = new Date();
-      const card = saveFlashCard({ front: 'Q', back: 'A' });
-      const after = new Date();
+    describe('deleteFlashCard', () => {
+        it('should delete a flashcard', async () => {
+            const eqMock = vi.fn().mockResolvedValue({
+                error: null,
+            });
 
-      const createdAt = new Date(card.createdAt);
-      expect(createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(createdAt.getTime()).toBeLessThanOrEqual(after.getTime());
-    });
-  });
+            const deleteMock = vi.fn().mockReturnValue({ eq: eqMock });
 
-  describe('getFlashCards', () => {
-    it('should return empty array when no flashcards exist', () => {
-      const cards = getFlashCards();
-      expect(cards).toEqual([]);
-    });
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                delete: deleteMock,
+            } as any);
 
-    it('should return all saved flashcards', () => {
-      saveFlashCard({ front: 'Q1', back: 'A1' });
-      saveFlashCard({ front: 'Q2', back: 'A2' });
+            await deleteFlashCard('fc-123');
 
-      const cards = getFlashCards();
-      expect(cards).toHaveLength(2);
-      expect(cards[0].front).toBe('Q1');
-      expect(cards[1].front).toBe('Q2');
+            expect(deleteMock).toHaveBeenCalled();
+            expect(eqMock).toHaveBeenCalledWith('id', 'fc-123');
+        });
     });
 
-    it('should return empty array when localStorage has invalid JSON', () => {
-      localStorage.setItem('flashCards_poc', 'invalid json');
-      const cards = getFlashCards();
-      expect(cards).toEqual([]);
-    });
-  });
+    describe('updateFlashCard', () => {
+        it('should update a flashcard', async () => {
+            const eqMock = vi.fn().mockResolvedValue({
+                error: null,
+            });
 
-  describe('deleteFlashCard', () => {
-    it('should delete a flashcard by id', () => {
-      const card1 = saveFlashCard({ front: 'Q1', back: 'A1' });
-      const card2 = saveFlashCard({ front: 'Q2', back: 'A2' });
+            const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
 
-      deleteFlashCard(card1.id);
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                update: updateMock,
+            } as any);
 
-      const cards = getFlashCards();
-      expect(cards).toHaveLength(1);
-      expect(cards[0].id).toBe(card2.id);
-    });
+            await updateFlashCard('fc-123', { front: 'Updated Question' });
 
-    it('should not throw error when deleting non-existent flashcard', () => {
-      saveFlashCard({ front: 'Q1', back: 'A1' });
-
-      expect(() => deleteFlashCard('non-existent-id')).not.toThrow();
-
-      const cards = getFlashCards();
-      expect(cards).toHaveLength(1);
+            expect(updateMock).toHaveBeenCalledWith({ front: 'Updated Question' });
+            expect(eqMock).toHaveBeenCalledWith('id', 'fc-123');
+        });
     });
 
-    it('should delete all matching flashcards', () => {
-      const card = saveFlashCard({ front: 'Q1', back: 'A1' });
-      saveFlashCard({ front: 'Q2', back: 'A2' });
-      saveFlashCard({ front: 'Q3', back: 'A3' });
+    describe('createSession', () => {
+        it('should create a session when user is authenticated', async () => {
+            const mockSession = {
+                id: 'session-123',
+                name: 'Test Session',
+                created_at: '2024-01-01',
+                updated_at: '2024-01-01',
+                user_id: mockUserId,
+            };
 
-      deleteFlashCard(card.id);
+            const singleMock = vi.fn().mockResolvedValue({
+                data: mockSession,
+                error: null,
+            });
 
-      const cards = getFlashCards();
-      expect(cards).toHaveLength(2);
-      expect(cards.find((c) => c.id === card.id)).toBeUndefined();
-    });
-  });
+            const selectMock = vi.fn().mockReturnValue({ single: singleMock });
+            const insertMock = vi.fn().mockReturnValue({ select: selectMock });
 
-  describe('updateFlashCard', () => {
-    it('should update flashcard front text', () => {
-      const card = saveFlashCard({ front: 'Original', back: 'Answer' });
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                insert: insertMock,
+            } as any);
 
-      updateFlashCard(card.id, { front: 'Updated' });
+            const result = await createSession('Test Session');
 
-      const cards = getFlashCards();
-      expect(cards[0].front).toBe('Updated');
-      expect(cards[0].back).toBe('Answer');
-      expect(cards[0].id).toBe(card.id);
-    });
+            expect(result).toEqual({
+                id: 'session-123',
+                name: 'Test Session',
+                createdAt: '2024-01-01',
+                updatedAt: '2024-01-01',
+            });
+            expect(insertMock).toHaveBeenCalledWith({
+                name: 'Test Session',
+                user_id: mockUserId,
+            });
+        });
 
-    it('should update flashcard back text', () => {
-      const card = saveFlashCard({ front: 'Question', back: 'Original' });
+        it('should throw error when user is not authenticated', async () => {
+            vi.mocked(supabaseClient.auth.getUser).mockResolvedValue({
+                data: { user: null },
+                error: null,
+            });
 
-      updateFlashCard(card.id, { back: 'Updated' });
-
-      const cards = getFlashCards();
-      expect(cards[0].back).toBe('Updated');
-      expect(cards[0].front).toBe('Question');
-    });
-
-    it('should update both front and back', () => {
-      const card = saveFlashCard({ front: 'Q', back: 'A' });
-
-      updateFlashCard(card.id, { front: 'New Q', back: 'New A' });
-
-      const cards = getFlashCards();
-      expect(cards[0].front).toBe('New Q');
-      expect(cards[0].back).toBe('New A');
-    });
-
-    it('should not update id or createdAt', () => {
-      const card = saveFlashCard({ front: 'Q', back: 'A' });
-      const originalId = card.id;
-      const originalCreatedAt = card.createdAt;
-
-      updateFlashCard(card.id, { front: 'Updated' });
-
-      const cards = getFlashCards();
-      expect(cards[0].id).toBe(originalId);
-      expect(cards[0].createdAt).toBe(originalCreatedAt);
+            await expect(createSession('Test Session')).rejects.toThrow(
+                'Musisz być zalogowany, aby utworzyć sesję',
+            );
+        });
     });
 
-    it('should only update the specified flashcard', () => {
-      const card1 = saveFlashCard({ front: 'Q1', back: 'A1' });
-      const card2 = saveFlashCard({ front: 'Q2', back: 'A2' });
+    describe('getSessions', () => {
+        it('should return sessions for authenticated user', async () => {
+            const mockSessions = [
+                {
+                    id: 'session-1',
+                    name: 'Session 1',
+                    created_at: '2024-01-01',
+                    updated_at: '2024-01-01',
+                    user_id: mockUserId,
+                    flash_cards: [{ count: 5 }],
+                },
+            ];
 
-      updateFlashCard(card1.id, { front: 'Updated' });
+            const orderMock = vi.fn().mockResolvedValue({
+                data: mockSessions,
+                error: null,
+            });
 
-      const cards = getFlashCards();
-      expect(cards[0].front).toBe('Updated');
-      expect(cards[1].front).toBe('Q2');
+            const eqMock = vi.fn().mockReturnValue({ order: orderMock });
+            const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
+
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                select: selectMock,
+            } as any);
+
+            const result = await getSessions();
+
+            expect(result).toHaveLength(1);
+            expect(result[0].name).toBe('Session 1');
+            expect(result[0].flashCardCount).toBe(5);
+        });
+
+        it('should return empty array when user is not authenticated', async () => {
+            vi.mocked(supabaseClient.auth.getUser).mockResolvedValue({
+                data: { user: null },
+                error: null,
+            });
+
+            const result = await getSessions();
+
+            expect(result).toEqual([]);
+        });
     });
 
-    it('should not throw error when updating non-existent flashcard', () => {
-      saveFlashCard({ front: 'Q1', back: 'A1' });
+    describe('saveFlashCardsToSession', () => {
+        it('should save multiple flashcards to a session', async () => {
+            const mockSession = {
+                id: 'session-123',
+                name: 'Test Session',
+                created_at: '2024-01-01',
+                updated_at: '2024-01-01',
+                user_id: mockUserId,
+            };
 
-      expect(() =>
-        updateFlashCard('non-existent-id', { front: 'Updated' })
-      ).not.toThrow();
-    });
-  });
+            // Mock createSession
+            const singleMock = vi.fn().mockResolvedValue({
+                data: mockSession,
+                error: null,
+            });
 
-  describe('Edge cases', () => {
-    it('should handle empty strings', () => {
-      const card = saveFlashCard({ front: '', back: '' });
-      expect(card.front).toBe('');
-      expect(card.back).toBe('');
-    });
+            const selectMock = vi.fn().mockReturnValue({ single: singleMock });
+            const insertMock = vi.fn().mockResolvedValue({ error: null });
 
-    it('should handle long strings', () => {
-      const longString = 'a'.repeat(10000);
-      const card = saveFlashCard({ front: longString, back: longString });
-      expect(card.front).toBe(longString);
-      expect(card.back).toBe(longString);
-    });
+            vi.mocked(supabaseClient.from).mockReturnValue({
+                insert: insertMock,
+                select: selectMock,
+            } as any);
 
-    it('should handle special characters', () => {
-      const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`"\'\\';
-      const card = saveFlashCard({ front: specialChars, back: specialChars });
-      expect(card.front).toBe(specialChars);
-      expect(card.back).toBe(specialChars);
-    });
+            const flashCards = [
+                { front: 'Q1', back: 'A1' },
+                { front: 'Q2', back: 'A2' },
+            ];
 
-    it('should handle unicode characters', () => {
-      const unicode = '你好世界 🎉 Привет مرحبا';
-      const card = saveFlashCard({ front: unicode, back: unicode });
-      expect(card.front).toBe(unicode);
-      expect(card.back).toBe(unicode);
+            const result = await saveFlashCardsToSession(flashCards, 'Test Session');
+
+            expect(result.id).toBe('session-123');
+            expect(insertMock).toHaveBeenCalled();
+        });
     });
-  });
 });
