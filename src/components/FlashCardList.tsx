@@ -5,6 +5,7 @@ interface FlashCardListProps {
     flashCards: FlashCardWithStatus[];
     onAccept: (id: string, front: string, back: string) => void;
     onReject: (id: string) => void;
+    onSaveToSession?: () => void;
     isLoading?: boolean;
 }
 
@@ -12,6 +13,7 @@ export function FlashCardList({
                                   flashCards,
                                   onAccept,
                                   onReject,
+                                  onSaveToSession,
                                   isLoading = false,
                               }: FlashCardListProps) {
     const acceptedCount = flashCards.filter((fc) => fc.status === 'accepted').length;
@@ -33,7 +35,17 @@ export function FlashCardList({
     return (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-3">Wygenerowane fiszki</h2>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xl font-bold text-gray-900">Wygenerowane fiszki</h2>
+                    {acceptedCount > 0 && onSaveToSession && (
+                        <button
+                            onClick={onSaveToSession}
+                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                            Zapisz do sesji ({acceptedCount})
+                        </button>
+                    )}
+                </div>
                 <div className="flex gap-4 text-sm">
           <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-800">
             <span>Oczekujące: {pendingFlashCards.length}</span>
