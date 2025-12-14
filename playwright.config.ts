@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load e2e-specific environment variables
+dotenv.config({ path: path.resolve(__dirname, '.env.e2e') });
 
 export default defineConfig({
   testDir: './e2e',
