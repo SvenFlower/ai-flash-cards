@@ -1,36 +1,69 @@
 {
-	"name": "ai-flash-cards",
-	"description": "Build a personal website, blog, or portfolio with Astro.",
-	"cloudflare": {
-		"label": "Astro Framework Starter",
-		"products": [
-			"Workers"
-		],
-		"categories": [],
-		"preview_icon_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/394ca3c9-d351-4036-035a-9f6dfa26dd00/public",
-		"preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/f40a6577-eed5-4f3e-cef4-b5ef0a1be100/preview",
-		"publish": true
-	},
-	"dependencies": {
-		"@astrojs/cloudflare": "12.6.12",
-		"@astrojs/mdx": "4.3.12",
-		"@astrojs/rss": "4.0.14",
-		"@astrojs/sitemap": "3.6.0",
-		"astro": "5.16.2",
-		"typescript": "5.9.3"
-	},
-	"devDependencies": {
-		"wrangler": "4.51.0"
-	},
-	"private": true,
-	"scripts": {
-		"astro": "astro",
-		"build": "astro build",
-		"cf-typegen": "wrangler types",
-		"check": "astro build && tsc && wrangler deploy --dry-run",
-		"deploy": "wrangler deploy",
-		"dev": "astro dev",
-		"preview": "astro build && wrangler dev"
-	},
-	"type": "module"
+  "name": "ai-flash-cards",
+  "description": "Build a personal website, blog, or portfolio with Astro.",
+  "cloudflare": {
+    "label": "Astro Framework Starter",
+    "products": [
+      "Workers"
+    ],
+    "categories": [],
+    "preview_icon_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/394ca3c9-d351-4036-035a-9f6dfa26dd00/public",
+    "preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/f40a6577-eed5-4f3e-cef4-b5ef0a1be100/preview",
+    "publish": true
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "12.6.12",
+    "@astrojs/mdx": "4.3.12",
+    "@astrojs/rss": "4.0.14",
+    "@astrojs/sitemap": "3.6.0",
+    "astro": "5.16.2",
+    "typescript": "5.9.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.487.0",
+    "tailwind-merge": "^3.1.0",
+    "tailwindcss": "^4.1.13",
+    "tw-animate-css": "^1.2.5",
+    "class-variance-authority": "^0.7.1"
+  },
+  "devDependencies": {
+    "wrangler": "4.51.0",
+    "@eslint/compat": "1.2.7",
+    "@eslint/js": "9.23.0",
+    "@typescript-eslint/eslint-plugin": "8.49.0",
+    "@typescript-eslint/parser": "8.49.0",
+    "eslint": "9.23.0",
+    "eslint-config-prettier": "10.1.1",
+    "eslint-import-resolver-typescript": "4.2.5",
+    "eslint-plugin-astro": "1.3.1",
+    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-prettier": "5.2.5",
+    "eslint-plugin-react": "7.37.4",
+    "eslint-plugin-react-compiler": "19.0.0-beta-aeaed83-20250323",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "husky": "9.1.7",
+    "lint-staged": "15.5.0",
+    "prettier-plugin-astro": "0.14.1"
+  },
+  "private": true,
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "cf-typegen": "wrangler types",
+    "check": "astro build && tsc && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "astro dev",
+    "preview": "astro build && wrangler dev",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "type": "module",
+  "lint-staged": {
+    "*.{ts,tsx,astro}": [
+      "eslint --fix"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
 }
