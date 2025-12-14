@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
-import { expect, afterEach } from 'vitest';
+import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+
+// Mock environment variables
+vi.stubEnv('VITE_OPENROUTER_API_KEY', 'test_api_key');
 
 // Cleanup after each test
 afterEach(() => {
