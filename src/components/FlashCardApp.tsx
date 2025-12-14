@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { TextInput } from './TextInput';
 import { FlashCardList } from './FlashCardList';
 import { SavedFlashCards } from './SavedFlashCards';
+import { SessionModal } from './SessionModal';
+import { AuthNav } from './AuthNav';
 import { generateFlashCards } from '../lib/openrouter';
-import { saveFlashCard, getFlashCards, deleteFlashCard } from '../lib/storage';
+import { saveFlashCard, getFlashCards, deleteFlashCard, saveFlashCardsToSession } from '../lib/storage';
 import type { FlashCardWithStatus, FlashCard } from '../lib/types.ts';
 
 export function FlashCardApp() {
@@ -12,9 +14,23 @@ export function FlashCardApp() {
     const [savedFlashCards, setSavedFlashCards] = useState<FlashCard[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+
+    // Generate default session name: "Sesja YYYY-MM-DD"
+    const getDefaultSessionName = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `Sesja ${year}-${month}-${day}`;
+    };
 
     useEffect(() => {
-        setSavedFlashCards(getFlashCards());
+        const loadFlashCards = async () => {
+            const flashCards = await getFlashCards();
+            setSavedFlashCards(flashCards);
+        };
+        loadFlashCards();
     }, []);
 
     const handleGenerate = async () => {
@@ -38,7 +54,7 @@ export function FlashCardApp() {
         }
     };
 
-    const handleAccept = (id: string, front: string, back: string) => {
+    const handleAccept = async (id: string, front: string, back: string) => {
         setGeneratedFlashCards((prev) =>
             prev.map((fc) =>
                 fc.id === id
@@ -48,8 +64,9 @@ export function FlashCardApp() {
         );
 
         try {
-            saveFlashCard({ front, back });
-            setSavedFlashCards(getFlashCards());
+            await saveFlashCard({ front, back });
+            const flashCards = await getFlashCards();
+            setSavedFlashCards(flashCards);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Błąd przy zapisie';
             setError(message);
@@ -64,21 +81,79 @@ export function FlashCardApp() {
         );
     };
 
-    const handleDeleteSaved = (id: string) => {
+    const handleDeleteSaved = async (id: string) => {
         try {
-            deleteFlashCard(id);
-            setSavedFlashCards(getFlashCards());
+            await deleteFlashCard(id);
+            const flashCards = await getFlashCards();
+            setSavedFlashCards(flashCards);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Błąd przy usuwaniu';
             setError(message);
         }
     };
 
+    const handleSaveToSession = () => {
+        setIsSessionModalOpen(true);
+    };
+
+    const handleSessionSave = async (sessionName: string) => {
+        try {
+            // Get only accepted flashcards
+            const acceptedFlashCards = generatedFlashCards
+                .filter((fc) => fc.status === 'accepted')
+                .map(({ front, back }) => ({ front, back }));
+
+            if (acceptedFlashCards.length === 0) {
+                throw new Error('Brak zaakceptowanych fiszek do zapisania');
+            }
+
+            await saveFlashCardsToSession(acceptedFlashCards, sessionName);
+
+            // Clear generated flashcards after successful save
+            setGeneratedFlashCards([]);
+            setIsSessionModalOpen(false);
+
+            // Show success message
+            alert(`Sesja "${sessionName}" została zapisana z ${acceptedFlashCards.length} fiszkami!`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Błąd przy zapisywaniu sesji';
+            setError(message);
+            throw err;
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+            <nav className="bg-white border-b border-gray-200 mb-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 justify-between items-center">
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900">10x FlashCards</h1>
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-4">
+                                <a
+                                    href="/"
+                                    className="text-gray-900 font-medium"
+                                >
+                                    Strona główna
+                                </a>
+                                <a
+                                    href="/sesje"
+                                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                                >
+                                    Sesje
+                                </a>
+                            </div>
+                            <AuthNav />
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
                 <div className="mb-8 text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">10x FlashCards</h1>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Generator Fiszek AI</h2>
                     <p className="text-gray-600">Generuj fiszki edukacyjne za pomocą AI</p>
                 </div>
 
@@ -99,6 +174,7 @@ export function FlashCardApp() {
                                 flashCards={generatedFlashCards}
                                 onAccept={handleAccept}
                                 onReject={handleReject}
+                                onSaveToSession={handleSaveToSession}
                                 isLoading={isLoading}
                             />
                         )}
@@ -112,6 +188,13 @@ export function FlashCardApp() {
                     </div>
                 </div>
             </div>
+
+            <SessionModal
+                isOpen={isSessionModalOpen}
+                onClose={() => setIsSessionModalOpen(false)}
+                onSave={handleSessionSave}
+                defaultName={getDefaultSessionName()}
+            />
         </div>
     );
 }

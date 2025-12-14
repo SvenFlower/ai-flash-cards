@@ -1,0 +1,118 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getSessionWithFlashCards } from '../../lib/storage';
+import { AuthNav } from '../../components/AuthNav';
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/sesje');
+}
+
+const result = await getSessionWithFlashCards(id);
+
+if (!result) {
+  return Astro.redirect('/sesje');
+}
+
+const { session, flashCards } = result;
+---
+
+<Layout title={`${session.name} - 10x FlashCards`}>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <nav class="bg-white border-b border-gray-200">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 justify-between items-center">
+          <div>
+            <h1 class="text-xl font-bold text-gray-900">10x FlashCards</h1>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
+              <a
+                href="/"
+                class="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Strona główna
+              </a>
+              <a
+                href="/sesje"
+                class="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Sesje
+              </a>
+            </div>
+            <AuthNav client:load />
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">{session.name}</h2>
+            <p class="text-gray-600">
+              Utworzono: {new Date(session.createdAt).toLocaleDateString('pl-PL', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+          <a
+            href="/sesje"
+            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            ← Wróć do sesji
+          </a>
+        </div>
+
+        <div class="mb-4">
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            {flashCards.length} {flashCards.length === 1 ? 'fiszka' : 'fiszek'}
+          </span>
+        </div>
+      </div>
+
+      {flashCards.length === 0 ? (
+        <div class="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
+          <p class="text-gray-600">Ta sesja nie zawiera żadnych fiszek.</p>
+        </div>
+      ) : (
+        <div class="space-y-4">
+          {flashCards.map((flashCard, index) => (
+            <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <div class="mb-2">
+                <span class="text-sm font-medium text-gray-500">Fiszka #{index + 1}</span>
+              </div>
+              <div class="mb-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Przód:</h3>
+                <p class="text-gray-900">{flashCard.front}</p>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Tył:</h3>
+                <p class="text-gray-900">{flashCard.back}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
