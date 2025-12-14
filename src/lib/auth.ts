@@ -20,6 +20,9 @@ export async function register(email: string, password: string): Promise<AuthRes
         const { data, error } = await supabaseClient.auth.signUp({
             email,
             password,
+            options: {
+                emailRedirectTo: `${new URL(request.url).origin}/logowanie`,
+            },
         });
 
         if (error) {
