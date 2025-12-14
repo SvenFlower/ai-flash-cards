@@ -38,22 +38,26 @@ test.describe('User Flow E2E', () => {
     const educationalText = `
 Fotosynteza to proces, w którym rośliny wykorzystują światło słoneczne do produkcji glukozy z dwutlenku węgla i wody.
 Proces ten zachodzi w chloroplastach, które zawierają chlorofil - zielony barwnik odpowiedzialny za wychwytywanie energii świetlnej.
-Produktami ubocznymi fotosyntezy są tlen i woda. Fotosynteza jest kluczowa dla życia na Ziemi, ponieważ dostarcza tlen do atmosfery.
-Równanie chemiczne fotosyntezy: 6CO2 + 6H2O + światło → C6H12O6 + 6O2.
+Produktami ubocznymi fotosyntezy są tlen i woda. Fotosynteza jest kluczowa dla życia na Ziemi, ponieważ dostarcza tlen do atmosfery
+i stanowi podstawę dla prawie wszystkich łańcuchów pokarmowych. Równanie chemiczne fotosyntezy: 6CO2 + 6H2O + światło → C6H12O6 + 6O2.
 
 Chloroplasty zawierają błony tylakoidowe, w których zachodzi faza jasna fotosyntezy. W tej fazie energia świetlna jest przekształcana w energię chemiczną
 w postaci ATP i NADPH. Następnie w fazie ciemnej, która zachodzi w stromie chloroplastów, wykorzystywane są ATP i NADPH do syntezy glukozy z dwutlenku węgla
-w cyklu Calvina.
+w cyklu Calvina. Cykl Calvina składa się z trzech głównych etapów: fiksacji węgla, redukcji i regeneracji RuBP.
 
 Fotosynteza jest procesem endotermicznym, co oznacza, że wymaga dostarczenia energii z zewnątrz. Ta energia pochodzi ze światła słonecznego.
 Chlorofil absorbuje światło głównie w zakresie czerwieni i fioletu, podczas gdy światło zielone jest odbijane, dlatego rośliny mają zielony kolor.
+Oprócz chlorofilu a, w procesie fotosyntezy biorą udział również inne barwniki pomocnicze, takie jak chlorofil b, karotenoidy i ksantofile.
 
 Istnieją różne typy fotosyntezy: fotosynteza C3, C4 i CAM. Rośliny C3, takie jak pszenica i ryż, bezpośrednio wiążą CO2 w cyklu Calvina.
 Rośliny C4, jak kukurydza i trzcina cukrowa, mają dodatkowy mechanizm koncentrowania CO2, co zwiększa efektywność fotosyntezy w warunkach wysokiej temperatury.
-Rośliny CAM, takie jak kaktusy, otwierają aparaty szparkowe w nocy, aby zminimalizować utratę wody.
+Rośliny CAM, takie jak kaktusy i agawy, otwierają aparaty szparkowe w nocy, aby zminimalizować utratę wody, co jest adaptacją do suchego klimatu.
 
-Efektywność fotosyntezy zależy od wielu czynników, w tym od intensywności światła, stężenia CO2, temperatury i dostępności wody.
-Optimalne warunki dla fotosyntezy różnią się w zależności od gatunku rośliny i jej adaptacji do środowiska.
+Efektywność fotosyntezy zależy od wielu czynników środowiskowych. Intensywność światła wpływa na szybkość reakcji świetlnych. Przy niskiej intensywności
+światło jest czynnikiem limitującym, natomiast przy wysokiej intensywności innee czynniki stają się ograniczające. Stężenie dwutlenku węgla w atmosferze
+wpływa bezpośrednio na fazę ciemną fotosyntezy. Temperatura oddziałuje na aktywność enzymów biorących udział w procesie, przy czym optymalna temperatura
+dla większości roślin wynosi około 25-30 stopni Celsjusza. Dostępność wody jest kluczowa nie tylko jako substrat w reakcjach fotosyntezy, ale również
+jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową przez aparaty szparkowe.
     `.trim();
 
     await textarea.fill(educationalText);
