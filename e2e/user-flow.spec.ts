@@ -32,7 +32,7 @@ test.describe('User Flow E2E', () => {
     await expect(page.getByText(E2E_USER)).toBeVisible();
 
     // Step 8: Generate flashcards - fill in text
-    const textarea = page.getByPlaceholder(/wprowadź tekst/i);
+    const textarea = page.getByPlaceholder(/wklej tutaj tekst/i);
     await expect(textarea).toBeVisible();
 
     const educationalText = `
@@ -139,7 +139,7 @@ Równanie chemiczne fotosyntezy: 6CO2 + 6H2O + światło → C6H12O6 + 6O2.
     await expect(page).toHaveURL('/');
 
     // Try to generate with short text
-    const textarea = page.getByPlaceholder(/wprowadź tekst/i);
+    const textarea = page.getByPlaceholder(/wklej tutaj tekst/i);
     await textarea.fill('Short text');
 
     const generateButton = page.getByRole('button', { name: /generuj fiszki/i });
