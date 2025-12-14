@@ -29,10 +29,10 @@ Zwróć TYLKO JSON w formacie:
 }
 
 export async function generateFlashCards(text: string): Promise<GeneratedFlashCard[]> {
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    const apiKey = import.meta.env.PUBLIC_OPENROUTER_API_KEY;
 
     if (!apiKey) {
-        throw new Error('OpenRouter API key is not configured. Please set VITE_OPENROUTER_API_KEY in .env');
+        throw new Error('OpenRouter API key is not configured. Please set PUBLIC_OPENROUTER_API_KEY in .env');
     }
 
     const controller = new AbortController();
@@ -75,7 +75,16 @@ export async function generateFlashCards(text: string): Promise<GeneratedFlashCa
             throw new Error('Invalid response format from API');
         }
 
-        const parsed = JSON.parse(content);
+        // Remove markdown code blocks if present
+        let cleanedContent = content.trim();
+
+        // Match content between ```json and ``` (or just ``` and ```)
+        const codeBlockMatch = cleanedContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+        if (codeBlockMatch) {
+            cleanedContent = codeBlockMatch[1].trim();
+        }
+
+        const parsed = JSON.parse(cleanedContent);
 
         if (!parsed.flashCards || !Array.isArray(parsed.flashCards)) {
             throw new Error('Invalid flashCards format in response');
