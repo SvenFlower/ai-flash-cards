@@ -21,7 +21,7 @@ export async function register(email: string, password: string): Promise<AuthRes
             email,
             password,
             options: {
-                emailRedirectTo: `${new URL(request.url).origin}/logowanie`,
+                emailRedirectTo: `${window.location.origin}/logowanie`,
             },
         });
 
