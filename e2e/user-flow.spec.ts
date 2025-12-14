@@ -1,0 +1,170 @@
+import { test, expect } from '@playwright/test';
+
+const E2E_USER = process.env.E2E_USER || '';
+const E2E_PASS = process.env.E2E_PASS || '';
+
+test.describe('User Flow E2E', () => {
+  test('complete user flow: login -> generate flashcards -> save to session -> view session', async ({
+    page,
+  }) => {
+    // Step 1: Navigate to home page
+    await page.goto('/');
+
+    // Step 2: Should see login link (not authenticated)
+    const loginLink = page.getByRole('link', { name: /logowanie/i });
+    await expect(loginLink).toBeVisible();
+
+    // Step 3: Click login link
+    await loginLink.click();
+    await expect(page).toHaveURL('/logowanie');
+
+    // Step 4: Fill in login form
+    await page.getByLabel(/email/i).fill(E2E_USER);
+    await page.getByLabel(/hasło/i).fill(E2E_PASS);
+
+    // Step 5: Submit login form
+    await page.getByRole('button', { name: /zaloguj się/i }).click();
+
+    // Step 6: Should redirect to home page after successful login
+    await expect(page).toHaveURL('/');
+
+    // Step 7: Should see user email in nav (authenticated)
+    await expect(page.getByText(E2E_USER)).toBeVisible();
+
+    // Step 8: Generate flashcards - fill in text
+    const textarea = page.getByPlaceholder(/wprowadź tekst/i);
+    await expect(textarea).toBeVisible();
+
+    const educationalText = `
+Fotosynteza to proces, w którym rośliny wykorzystują światło słoneczne do produkcji glukozy z dwutlenku węgla i wody.
+Proces ten zachodzi w chloroplastach, które zawierają chlorofil - zielony barwnik.
+Produktami ubocznymi fotosyntezy są tlen i woda.
+Fotosynteza jest kluczowa dla życia na Ziemi, ponieważ dostarcza tlen do atmosfery.
+Równanie chemiczne fotosyntezy: 6CO2 + 6H2O + światło → C6H12O6 + 6O2.
+    `.trim();
+
+    await textarea.fill(educationalText);
+
+    // Step 9: Click generate button
+    const generateButton = page.getByRole('button', { name: /generuj fiszki/i });
+    await generateButton.click();
+
+    // Step 10: Wait for flashcards to be generated (with longer timeout for AI)
+    await expect(page.getByText(/fiszka/i).first()).toBeVisible({ timeout: 60000 });
+
+    // Step 11: Accept all flashcards
+    const acceptButtons = page.getByRole('button', { name: /akceptuj/i });
+    const count = await acceptButtons.count();
+
+    for (let i = 0; i < count; i++) {
+      await acceptButtons.nth(0).click(); // Always click first as they disappear when accepted
+    }
+
+    // Step 12: Save to session
+    const saveButton = page.getByRole('button', { name: /zapisz do sesji/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+
+    // Step 13: Session modal should appear
+    const sessionNameInput = page.getByPlaceholder(/nazwa sesji/i);
+    await expect(sessionNameInput).toBeVisible();
+
+    // Step 14: Verify default name format (Sesja YYYY-MM-DD)
+    const defaultName = await sessionNameInput.inputValue();
+    expect(defaultName).toMatch(/^Sesja \d{4}-\d{2}-\d{2}$/);
+
+    // Step 15: Change session name
+    const customSessionName = `E2E Test Session ${Date.now()}`;
+    await sessionNameInput.fill(customSessionName);
+
+    // Step 16: Save session
+    await page.getByRole('button', { name: /zapisz/i }).click();
+
+    // Step 17: Navigate to sessions page
+    await page.getByRole('link', { name: /sesje/i }).click();
+    await expect(page).toHaveURL('/sesje');
+
+    // Step 18: Should see the created session
+    await expect(page.getByText(customSessionName)).toBeVisible();
+
+    // Step 19: Click on the session to view details
+    const sessionLink = page
+      .locator('a')
+      .filter({ hasText: customSessionName })
+      .filter({ hasText: /zobacz/i });
+    await sessionLink.click();
+
+    // Step 20: Should see session details with flashcards
+    await expect(page.getByText(customSessionName)).toBeVisible();
+    await expect(page.getByText(/fiszka #1/i)).toBeVisible();
+
+    // Step 21: Verify flashcard content is displayed
+    const flashcardFronts = page.locator('p', { hasText: /przód:/i });
+    const flashcardBacks = page.locator('p', { hasText: /tył:/i });
+    await expect(flashcardFronts.first()).toBeVisible();
+    await expect(flashcardBacks.first()).toBeVisible();
+
+    // Step 22: Navigate back to sessions list
+    await page.getByRole('link', { name: /powrót/i }).click();
+    await expect(page).toHaveURL('/sesje');
+
+    // Step 23: Logout
+    await page.getByRole('button', { name: /wyloguj/i }).click();
+
+    // Step 24: Should see login/register links again
+    await expect(page.getByRole('link', { name: /logowanie/i })).toBeVisible();
+  });
+
+  test('should show error message for invalid login credentials', async ({ page }) => {
+    // Navigate to login page
+    await page.goto('/logowanie');
+
+    // Fill in invalid credentials
+    await page.getByLabel(/email/i).fill('invalid@example.com');
+    await page.getByLabel(/hasło/i).fill('wrongpassword');
+
+    // Submit form
+    await page.getByRole('button', { name: /zaloguj się/i }).click();
+
+    // Should see error message
+    await expect(page.getByText(/invalid/i)).toBeVisible();
+  });
+
+  test('should require minimum text length for flashcard generation', async ({ page }) => {
+    // Login first
+    await page.goto('/logowanie');
+    await page.getByLabel(/email/i).fill(E2E_USER);
+    await page.getByLabel(/hasło/i).fill(E2E_PASS);
+    await page.getByRole('button', { name: /zaloguj się/i }).click();
+    await expect(page).toHaveURL('/');
+
+    // Try to generate with short text
+    const textarea = page.getByPlaceholder(/wprowadź tekst/i);
+    await textarea.fill('Short text');
+
+    const generateButton = page.getByRole('button', { name: /generuj fiszki/i });
+    await generateButton.click();
+
+    // Should see validation error
+    await expect(
+      page.getByText(/tekst musi mieć co najmniej.*znaków/i),
+    ).toBeVisible();
+  });
+
+  test('should navigate between pages using navbar', async ({ page }) => {
+    // Login
+    await page.goto('/logowanie');
+    await page.getByLabel(/email/i).fill(E2E_USER);
+    await page.getByLabel(/hasło/i).fill(E2E_PASS);
+    await page.getByRole('button', { name: /zaloguj się/i }).click();
+    await expect(page).toHaveURL('/');
+
+    // Navigate to sessions
+    await page.getByRole('link', { name: /sesje/i }).click();
+    await expect(page).toHaveURL('/sesje');
+
+    // Navigate back to home
+    await page.getByRole('link', { name: /10x flashcards/i }).click();
+    await expect(page).toHaveURL('/');
+  });
+});
