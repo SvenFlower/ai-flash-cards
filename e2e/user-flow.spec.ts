@@ -74,7 +74,7 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     const count = await acceptButtons.count();
 
     for (let i = 0; i < count; i++) {
-      await acceptButtons.nth(0).click(); // Always click first as they disappear when accepted
+      await acceptButtons.nth(i).click(); // Always click first as they disappear when accepted
     }
 
     // Step 12: Save to session
@@ -83,7 +83,7 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await saveButton.click();
 
     // Step 13: Session modal should appear
-    const sessionNameInput = page.getByPlaceholder(/nazwa sesji/i);
+    const sessionNameInput = page.getByPlaceholder(/np. Sesja 2024-12-14/i);
     await expect(sessionNameInput).toBeVisible();
 
     // Step 14: Verify default name format (Sesja YYYY-MM-DD)
@@ -95,7 +95,7 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await sessionNameInput.fill(customSessionName);
 
     // Step 16: Save session
-    await page.getByRole('button', { name: /zapisz/i }).click();
+    await page.getByRole('button', { name: /Zapisz/i }).click();
 
     // Step 17: Navigate to sessions page
     await page.getByRole('link', { name: /sesje/i }).click();
