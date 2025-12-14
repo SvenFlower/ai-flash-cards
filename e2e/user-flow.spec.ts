@@ -67,7 +67,7 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await generateButton.click();
 
     // Step 10: Wait for flashcards to be generated (with longer timeout for AI)
-    await expect(page.getByText(/fiszka/i).first()).toBeVisible({ timeout: 60000 });
+    await expect(page.getByText(/Wygenerowane fiszki/i).first()).toBeVisible({ timeout: 600000 });
 
     // Step 11: Accept all flashcards
     const acceptButtons = page.getByRole('button', { name: /akceptuj/i });
