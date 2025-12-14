@@ -201,3 +201,6 @@ dist
 
 ### Astro ###
 .astro/
+
+### IDEs ###
+.idea/
