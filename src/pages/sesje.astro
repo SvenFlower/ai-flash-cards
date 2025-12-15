@@ -8,9 +8,39 @@ export const prerender = false;
 
 // Debug: Check if user is authenticated
 const user = Astro.locals.user;
+const supabase = Astro.locals.supabase;
 console.log('[DEBUG sesje.astro] User:', user?.email, 'ID:', user?.id);
 
-const sessions = await getSessions();
+// For now, directly query sessions using the server supabase client
+const userId = user?.id;
+console.log('[DEBUG sesje.astro] userId from locals:', userId);
+
+let sessions = [];
+
+if (userId && supabase) {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select(`
+      *,
+      flash_cards (count)
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  console.log('[DEBUG sesje.astro] Query error:', error);
+  console.log('[DEBUG sesje.astro] Query data:', data);
+
+  if (!error && data) {
+    sessions = data.map((session: any) => ({
+      id: session.id,
+      name: session.name,
+      createdAt: session.created_at,
+      updatedAt: session.updated_at,
+      flashCardCount: session.flash_cards?.[0]?.count || 0,
+    }));
+  }
+}
+
 console.log('[DEBUG sesje.astro] Sessions count:', sessions.length);
 console.log('[DEBUG sesje.astro] Sessions:', sessions);
 
