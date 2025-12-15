@@ -97,6 +97,9 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     // Step 16: Save session (use plain string with exact match, not regex)
     await page.getByRole('button', { name: 'Zapisz', exact: true }).click();
 
+    // Wait for modal to close after saving
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
     // Step 17: Navigate to sessions page
     await page.getByRole('link', { name: /sesje/i }).click();
     await expect(page).toHaveURL('/sesje');
