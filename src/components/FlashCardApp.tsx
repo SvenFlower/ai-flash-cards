@@ -3,7 +3,7 @@ import { TextInput } from './TextInput';
 import { FlashCardList } from './FlashCardList';
 import { SessionModal } from './SessionModal';
 import { AuthNav } from './AuthNav';
-import { saveFlashCard, saveFlashCardsToSession } from '../lib/storage';
+import apiClient from '../lib/api-client';
 import type { FlashCardWithStatus } from '../lib/types.ts';
 import type { GenerateFlashCardsResponse } from '../lib/api-types';
 
@@ -98,7 +98,27 @@ export function FlashCardApp() {
                 throw new Error('Brak zaakceptowanych fiszek do zapisania');
             }
 
-            await saveFlashCardsToSession(acceptedFlashCards, sessionName);
+            // Create session using API client
+            const { data: sessionData, error: sessionError } = await apiClient.sessions.create({
+                name: sessionName,
+            });
+
+            if (sessionError || !sessionData) {
+                throw new Error(sessionError?.error.message || 'Błąd przy tworzeniu sesji');
+            }
+
+            // Create flashcards in the session
+            for (const flashCard of acceptedFlashCards) {
+                const { error: cardError } = await apiClient.flashcards.create({
+                    session_id: sessionData.session.id,
+                    front: flashCard.front,
+                    back: flashCard.back,
+                });
+
+                if (cardError) {
+                    throw new Error(cardError.error.message || 'Błąd przy zapisywaniu fiszki');
+                }
+            }
 
             // Clear generated flashcards after successful save
             setGeneratedFlashCards([]);
