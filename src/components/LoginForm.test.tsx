@@ -1,59 +1,60 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginForm } from './LoginForm';
-import * as auth from '../lib/auth';
 
-// Mock auth module
-vi.mock('../lib/auth', () => ({
-    login: vi.fn(),
-}));
+describe('LoginForm Component', () => {
+    const originalFetch = global.fetch;
+    const mockFetch = vi.fn();
+    const originalLocation = window.location;
 
-// Mock window.location
-delete (window as any).location;
-window.location = { href: '' } as any;
-
-describe('LoginForm', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        window.location.href = '';
+        global.fetch = mockFetch;
+        // Mock window.location.href
+        delete (window as { location?: Location }).location;
+        window.location = { ...originalLocation, href: '' } as Location;
     });
 
-    it('should render login form with all fields', () => {
+    afterEach(() => {
+        global.fetch = originalFetch;
+        window.location = originalLocation;
+        vi.restoreAllMocks();
+    });
+
+    it('should render login form', () => {
         render(<LoginForm />);
 
-        expect(screen.getByLabelText(/Email/i)).toBeTruthy();
-        expect(screen.getByLabelText(/Hasło/i)).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Zaloguj się/i })).toBeTruthy();
+        expect(screen.getByLabelText(/Email/i)).toBeDefined();
+        expect(screen.getByLabelText(/Hasło/i)).toBeDefined();
+        expect(screen.getByRole('button', { name: /Zaloguj się/i })).toBeDefined();
     });
 
-    it('should show link to registration page', () => {
+    it('should render registration link', () => {
         render(<LoginForm />);
 
-        const registerLink = screen.getByRole('link', { name: /Zarejestruj się/i });
-        expect(registerLink).toBeTruthy();
-        expect(registerLink.getAttribute('href')).toBe('/rejestracja');
+        const registerLink = screen.getByText(/Zarejestruj się/i);
+        expect(registerLink).toBeDefined();
+        expect(registerLink.closest('a')).toHaveProperty('href', expect.stringContaining('/rejestracja'));
     });
 
-    it('should show validation error when fields are empty', async () => {
+    it('should have required fields', () => {
+        render(<LoginForm />);
+
+        const emailInput = screen.getByLabelText(/Email/i) as HTMLInputElement;
+        const passwordInput = screen.getByLabelText(/Hasło/i) as HTMLInputElement;
+
+        expect(emailInput.required).toBe(true);
+        expect(passwordInput.required).toBe(true);
+    });
+
+    it('should call login API with correct credentials', async () => {
         const user = userEvent.setup();
-        render(<LoginForm />);
-
-        const submitButton = screen.getByRole('button', { name: /Zaloguj się/i });
-        await user.click(submitButton);
-
-        await waitFor(() => {
-            expect(screen.getByText(/Email i hasło są wymagane/i)).toBeTruthy();
-        });
-    });
-
-    it('should call login function with correct credentials', async () => {
-        const user = userEvent.setup();
-        const mockLogin = vi.mocked(auth.login);
-
-        mockLogin.mockResolvedValue({
-            user: { id: 'user-123', email: 'test@example.com' },
-            error: null,
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                user: { id: '123', email: 'test@example.com' },
+            }),
         });
 
         render(<LoginForm />);
@@ -67,17 +68,26 @@ describe('LoginForm', () => {
         await user.click(submitButton);
 
         await waitFor(() => {
-            expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+            expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: 'test@example.com',
+                    password: 'password123',
+                }),
+            });
         });
     });
 
-    it('should redirect to home page after successful login', async () => {
+    it('should redirect to home page on successful login', async () => {
         const user = userEvent.setup();
-        const mockLogin = vi.mocked(auth.login);
-
-        mockLogin.mockResolvedValue({
-            user: { id: 'user-123', email: 'test@example.com' },
-            error: null,
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                user: { id: '123', email: 'test@example.com' },
+            }),
         });
 
         render(<LoginForm />);
@@ -95,13 +105,14 @@ describe('LoginForm', () => {
         });
     });
 
-    it('should display error message when login fails', async () => {
+    it('should show error message on failed login', async () => {
         const user = userEvent.setup();
-        const mockLogin = vi.mocked(auth.login);
-
-        mockLogin.mockResolvedValue({
-            user: null,
-            error: { message: 'Invalid credentials' },
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            status: 401,
+            json: async () => ({
+                error: { message: 'Invalid credentials' },
+            }),
         });
 
         render(<LoginForm />);
@@ -115,50 +126,13 @@ describe('LoginForm', () => {
         await user.click(submitButton);
 
         await waitFor(() => {
-            expect(screen.getByText('Invalid credentials')).toBeTruthy();
+            expect(screen.getByText(/Invalid credentials/i)).toBeDefined();
         });
     });
 
-    it('should disable form during submission', async () => {
+    it('should show error message on network error', async () => {
         const user = userEvent.setup();
-        const mockLogin = vi.mocked(auth.login);
-
-        // Simulate slow login
-        mockLogin.mockImplementation(
-            () =>
-                new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            user: { id: 'user-123', email: 'test@example.com' },
-                            error: null,
-                        });
-                    }, 100);
-                }),
-        );
-
-        render(<LoginForm />);
-
-        const emailInput = screen.getByLabelText(/Email/i);
-        const passwordInput = screen.getByLabelText(/Hasło/i);
-        const submitButton = screen.getByRole('button', { name: /Zaloguj się/i });
-
-        await user.type(emailInput, 'test@example.com');
-        await user.type(passwordInput, 'password123');
-        await user.click(submitButton);
-
-        // Button should show loading state
-        expect(screen.getByText(/Logowanie.../i)).toBeTruthy();
-
-        // Inputs should be disabled
-        expect(emailInput).toHaveProperty('disabled', true);
-        expect(passwordInput).toHaveProperty('disabled', true);
-    });
-
-    it('should handle network errors gracefully', async () => {
-        const user = userEvent.setup();
-        const mockLogin = vi.mocked(auth.login);
-
-        mockLogin.mockRejectedValue(new Error('Network error'));
+        mockFetch.mockRejectedValueOnce(new Error('Network Error'));
 
         render(<LoginForm />);
 
@@ -171,7 +145,53 @@ describe('LoginForm', () => {
         await user.click(submitButton);
 
         await waitFor(() => {
-            expect(screen.getByText(/Błąd logowania/i)).toBeTruthy();
+            expect(screen.getByText(/Network Error/i)).toBeDefined();
+        });
+    });
+
+    it('should show loading state during login', async () => {
+        mockFetch.mockImplementation(
+            () => new Promise((resolve) => setTimeout(() => resolve({
+                ok: true,
+                json: async () => ({ user: { id: '123', email: 'test@example.com' } }),
+            }), 100))
+        );
+
+        render(<LoginForm />);
+
+        const emailInput = screen.getByLabelText(/Email/i);
+        const passwordInput = screen.getByLabelText(/Hasło/i);
+        const submitButton = screen.getByRole('button', { name: /Zaloguj się/i });
+
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'password123' } });
+        fireEvent.click(submitButton);
+
+        expect(screen.getByText(/Logowanie\.\.\./i)).toBeDefined();
+    });
+
+    it('should disable form inputs during login', async () => {
+        mockFetch.mockImplementation(
+            () => new Promise((resolve) => setTimeout(() => resolve({
+                ok: true,
+                json: async () => ({ user: { id: '123', email: 'test@example.com' } }),
+            }), 100))
+        );
+
+        render(<LoginForm />);
+
+        const emailInput = screen.getByLabelText(/Email/i) as HTMLInputElement;
+        const passwordInput = screen.getByLabelText(/Hasło/i) as HTMLInputElement;
+        const submitButton = screen.getByRole('button', { name: /Zaloguj się/i }) as HTMLButtonElement;
+
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'password123' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(emailInput.disabled).toBe(true);
+            expect(passwordInput.disabled).toBe(true);
+            expect(submitButton.disabled).toBe(true);
         });
     });
 });
