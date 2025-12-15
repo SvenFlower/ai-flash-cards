@@ -8,7 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load e2e-specific environment variables
-dotenv.config({ path: path.resolve(__dirname, '.env.e2e') });
+const envPath = path.resolve(__dirname, '.env.e2e');
+dotenv.config({ path: envPath });
 
 export default defineConfig({
   testDir: './e2e',
@@ -30,7 +31,11 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: `node -r dotenv/config node_modules/.bin/astro dev --host`,
+    env: {
+      DOTENV_CONFIG_PATH: envPath,
+      ...process.env,
+    },
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI,
   },
