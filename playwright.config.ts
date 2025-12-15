@@ -31,11 +31,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    env: {
-      // Pass e2e environment variables to the dev server
-      ...e2eEnv,
-    },
+    // Use dedicated e2e dev script that copies .env.e2e to .env.test
+    // Astro/Vite will load .env.test automatically
+    command: 'npm run dev:e2e',
     url: 'http://localhost:4321',
     // Don't reuse existing server - we need fresh server with e2e env vars
     reuseExistingServer: false,
