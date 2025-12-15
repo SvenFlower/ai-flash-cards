@@ -108,10 +108,10 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await expect(page.getByText(customSessionName)).toBeVisible();
 
     // Step 19: Click on the session to view details
-    const sessionLink = page
-      .locator('a')
-      .filter({ hasText: customSessionName })
-      .filter({ hasText: /zobacz/i });
+    // The session name is in the parent div, not in the link itself
+    // So we find the div with the session name, then find the "Zobacz" link within it
+    const sessionCard = page.locator('div').filter({ hasText: customSessionName });
+    const sessionLink = sessionCard.getByRole('link', { name: /zobacz/i });
     await sessionLink.click();
 
     // Step 20: Should see session details with flashcards
