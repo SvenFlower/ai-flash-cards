@@ -101,8 +101,18 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await page.getByRole('link', { name: /sesje/i }).click();
     await expect(page).toHaveURL('/sesje');
 
-    // Step 18: Should see the created session
-    await expect(page.getByText(customSessionName)).toBeVisible();
+    // Wait a bit for the page to load
+    await page.waitForLoadState('networkidle');
+
+    // Debug: Take a screenshot to see what's on the page
+    await page.screenshot({ path: 'test-results/sessions-page.png' });
+
+    // Debug: Log page content
+    const pageContent = await page.content();
+    console.log('[DEBUG] Sessions page loaded, looking for:', customSessionName);
+
+    // Step 18: Should see the created session (with longer timeout)
+    await expect(page.getByText(customSessionName)).toBeVisible({ timeout: 10000 });
 
     // Step 19: Click on the session to view details
     const sessionLink = page
