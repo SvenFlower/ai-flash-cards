@@ -16,10 +16,27 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
+  // Check if Supabase environment variables are configured
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      '[Middleware] Missing Supabase environment variables. ' +
+      'Please configure PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY in your deployment settings.'
+    );
+
+    // Fail gracefully - set auth to null so the app doesn't crash
+    context.locals.supabase = null as any;
+    context.locals.session = null;
+    context.locals.user = null;
+    return next();
+  }
+
   // Create server-side Supabase client that can read/write cookies
   const supabase = createServerClient<Database>(
-    import.meta.env.SUPABASE_URL,
-    import.meta.env.SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(key) {

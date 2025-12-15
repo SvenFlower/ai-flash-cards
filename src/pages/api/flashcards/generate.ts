@@ -35,8 +35,6 @@ const generateFlashCardsSchema = z.object({
     }),
 });
 
-type GenerateFlashCardsInput = z.infer<typeof generateFlashCardsSchema>;
-
 // ============================================================================
 // System Prompt for OpenRouter
 // ============================================================================
@@ -121,7 +119,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let body: GenerateFlashCardsRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -174,8 +172,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
         type: 'json_object',
       },
     };
-
-    console.log('[Generate FlashCards] Calling OpenRouter API for user:', locals.user.email);
 
     const openrouterResponse = await fetch(
       'https://openrouter.ai/api/v1/chat/completions',
@@ -235,11 +231,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       console.error('[Generate FlashCards] No valid flashcards generated');
       throw new Error('No valid flashcards were generated');
     }
-
-    console.log(
-      `[Generate FlashCards] Successfully generated ${flashcards.length} flashcards for user:`,
-      locals.user.email
-    );
 
     // Step 6: Return success response
     const response: GenerateFlashCardsResponse = { flashcards };

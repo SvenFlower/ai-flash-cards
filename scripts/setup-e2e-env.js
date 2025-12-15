@@ -11,6 +11,7 @@ try {
     resolve(rootDir, '.env.e2e'),
     resolve(rootDir, '.env.test')
   );
+  // eslint-disable-next-line no-console
   console.log('✓ Copied .env.e2e to .env.test');
 } catch (error) {
   console.error('✗ Failed to copy .env.e2e:', error.message);

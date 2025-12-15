@@ -189,7 +189,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   let body: UpdateFlashCardRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -278,7 +278,6 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    console.log('[FlashCard Update] Flashcard updated:', flashcardId, 'for user:', locals.user.email);
 
     // Step 6: Return updated flashcard
     const response: UpdateFlashCardResponse = {
@@ -399,7 +398,6 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
 
-    console.log('[FlashCard Delete] Flashcard deleted:', flashcardId, 'for user:', locals.user.email);
 
     // Step 4: Return success response
     const response: DeleteFlashCardResponse = {

@@ -148,7 +148,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let body: CreateFlashCardRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -250,7 +250,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    console.log('[FlashCard Create] Flashcard created:', flashcard.id, 'for user:', locals.user.email);
 
     // Step 6: Return success response
     const response: CreateFlashCardResponse = {

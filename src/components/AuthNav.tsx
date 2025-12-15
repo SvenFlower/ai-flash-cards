@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { AuthUser, MeResponse, LogoutResponse } from '../lib/api-types';
+import type { AuthUser, MeResponse } from '../lib/api-types';
 
 export function AuthNav() {
     const [user, setUser] = useState<AuthUser | null>(null);

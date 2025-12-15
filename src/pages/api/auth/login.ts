@@ -26,12 +26,12 @@ const loginSchema = z.object({
 // Handler
 // ============================================================================
 
-export const POST: APIRoute = async ({ request, locals, cookies }) => {
+export const POST: APIRoute = async ({ request, locals, cookies: _cookies }) => {
   // Step 1: Parse request body
   let body: LoginRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -104,8 +104,6 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
         }
       );
     }
-
-    console.log('[Auth Login] User logged in successfully:', data.user.email);
 
     // Step 4: Session cookies are automatically set by Supabase SSR
     // The middleware will handle cookie management

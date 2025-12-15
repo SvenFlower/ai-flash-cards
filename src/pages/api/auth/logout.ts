@@ -54,7 +54,6 @@ export const POST: APIRoute = async ({ locals }) => {
       );
     }
 
-    console.log('[Auth Logout] User logged out successfully:', locals.user.email);
 
     // Step 3: Cookies are automatically cleared by Supabase SSR
 

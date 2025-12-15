@@ -26,6 +26,15 @@ export function FlashCard({ flashCard, onAccept, onReject }: FlashCardCardProps)
             <div
                 className="relative h-40 cursor-pointer"
                 onClick={() => setIsFlipped(!isFlipped)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setIsFlipped(!isFlipped);
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={isFlipped ? 'Show front of card' : 'Show back of card'}
             >
                 <div
                     className="absolute inset-0 flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-4 transition-opacity"

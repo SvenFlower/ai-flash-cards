@@ -30,6 +30,7 @@ const updateSessionSchema = z.object({
 // Helper - Verify session ownership
 // ============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function verifySessionOwnership(supabase: any, sessionId: string, userId: string) {
   const { data: session, error } = await supabase
     .from('sessions')
@@ -216,7 +217,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   let body: UpdateSessionRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -293,7 +294,6 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    console.log('[Session Update] Session updated:', sessionId, 'for user:', locals.user.email);
 
     // Step 6: Return updated session
     const response: UpdateSessionResponse = {
@@ -388,7 +388,6 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
 
-    console.log('[Session Delete] Session deleted:', sessionId, 'for user:', locals.user.email);
 
     // Step 4: Return success response
     const response: DeleteSessionResponse = {

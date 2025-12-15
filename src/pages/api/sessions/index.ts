@@ -116,7 +116,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let body: CreateSessionRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -193,7 +193,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    console.log('[Sessions Create] Session created:', session.id, 'for user:', locals.user.email);
 
     // Step 5: Return success response
     const response: CreateSessionResponse = {

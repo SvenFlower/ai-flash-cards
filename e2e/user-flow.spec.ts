@@ -117,7 +117,7 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
 
     // Step 20: Should see session details with flashcards
     await expect(page.getByText(customSessionName)).toBeVisible();
-    await expect(page.getByText("Fiszka #1")).toBeVisible();
+    await expect(page.getByText("Fiszka #1", {exact: true})).toBeVisible();
 
     // Step 21: Verify flashcard content is displayed
     // "Przód:" and "Tył:" are in <h3> tags, not <p> tags

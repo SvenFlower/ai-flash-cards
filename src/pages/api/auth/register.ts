@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let body: RegisterRequest;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: {
@@ -123,7 +123,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    console.log('[Auth Register] User registered successfully:', data.user.email);
 
     // Step 4: Return success response
     const response: RegisterResponse = {
