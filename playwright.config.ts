@@ -31,11 +31,11 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Use dedicated e2e dev script that copies .env.e2e to .env.test
-    // Astro/Vite will load .env.test automatically
-    command: 'npm run dev:e2e',
+    // In CI, env vars are set via GitHub secrets, so use regular dev
+    // Locally, use dev:e2e which copies .env.e2e to .env.test
+    command: process.env.CI ? 'npm run dev' : 'npm run dev:e2e',
     url: 'http://localhost:4321',
     // Don't reuse existing server - we need fresh server with e2e env vars
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
   },
 });
