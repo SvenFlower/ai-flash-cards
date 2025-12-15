@@ -3,6 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import { getSessionWithFlashCards } from '../../lib/storage';
 import { AuthNav } from '../../components/AuthNav';
 
+// Force server-side rendering to access cookies
+export const prerender = false;
+
 const { id } = Astro.params;
 
 if (!id) {
