@@ -7,18 +7,52 @@ import { AuthNav } from '../../components/AuthNav';
 export const prerender = false;
 
 const { id } = Astro.params;
+const user = Astro.locals.user;
+const supabase = Astro.locals.supabase;
 
-if (!id) {
+if (!id || !user || !supabase) {
   return Astro.redirect('/sesje');
 }
 
-const result = await getSessionWithFlashCards(id);
+// Query session with the server client
+const { data: sessionData, error: sessionError } = await supabase
+  .from('sessions')
+  .select('*')
+  .eq('id', id)
+  .eq('user_id', user.id)
+  .single();
 
-if (!result) {
+if (sessionError || !sessionData) {
+  console.error('[DEBUG sesje/[id]] Session not found:', sessionError);
   return Astro.redirect('/sesje');
 }
 
-const { session, flashCards } = result;
+// Query flashcards for this session
+const { data: flashCardsData, error: flashCardsError } = await supabase
+  .from('flash_cards')
+  .select('*')
+  .eq('session_id', id)
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: true });
+
+if (flashCardsError) {
+  console.error('[DEBUG sesje/[id]] Error loading flashcards:', flashCardsError);
+}
+
+const session = {
+  id: sessionData.id,
+  name: sessionData.name,
+  createdAt: sessionData.created_at,
+  updatedAt: sessionData.updated_at,
+};
+
+const flashCards = (flashCardsData || []).map((fc: any) => ({
+  id: fc.id,
+  front: fc.front,
+  back: fc.back,
+  createdAt: fc.created_at,
+  sessionId: fc.session_id,
+}));
 ---
 
 <Layout title={`${session.name} - 10x FlashCards`}>
