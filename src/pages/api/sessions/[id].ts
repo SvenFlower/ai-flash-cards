@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { deleteSession } from '../../../lib/storage';
 
+export const prerender = false;
+
 export const DELETE: APIRoute = async ({ params }) => {
   const { id } = params;
 

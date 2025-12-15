@@ -108,9 +108,10 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await expect(page.getByText(customSessionName)).toBeVisible();
 
     // Step 19: Click on the session to view details
-    // The session name is in the parent div, not in the link itself
-    // So we find the div with the session name, then find the "Zobacz" link within it
-    const sessionCard = page.locator('div').filter({ hasText: customSessionName });
+    // Find the specific h3 heading with the session name, then navigate up to the session card
+    // h3 -> parent div (mb-4) -> parent div (session card with rounded-lg)
+    const sessionHeading = page.getByRole('heading', { name: customSessionName, exact: true, level: 3 });
+    const sessionCard = sessionHeading.locator('../..');
     const sessionLink = sessionCard.getByRole('link', { name: /zobacz/i });
     await sessionLink.click();
 
@@ -119,13 +120,12 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     await expect(page.getByText(/fiszka #1/i)).toBeVisible();
 
     // Step 21: Verify flashcard content is displayed
-    const flashcardFronts = page.locator('p', { hasText: /przód:/i });
-    const flashcardBacks = page.locator('p', { hasText: /tył:/i });
-    await expect(flashcardFronts.first()).toBeVisible();
-    await expect(flashcardBacks.first()).toBeVisible();
+    // "Przód:" and "Tył:" are in <h3> tags, not <p> tags
+    await expect(page.getByRole('heading', { name: /przód:/i, level: 3 }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /tył:/i, level: 3 }).first()).toBeVisible();
 
     // Step 22: Navigate back to sessions list
-    await page.getByRole('link', { name: /powrót/i }).click();
+    await page.getByRole('link', { name: /wróć do sesji/i }).click();
     await expect(page).toHaveURL('/sesje');
 
     // Step 23: Logout
