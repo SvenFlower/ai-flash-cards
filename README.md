@@ -1,64 +1,63 @@
-# Astro Starter Kit: Blog
+# 10x-cards
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/astro-blog-starter-template)
+AI-powered flashcard generation tool designed to minimize the time required to create educational flashcards.
 
-![Astro Template Preview](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+## Tech Stack
 
-<!-- dash-content-start -->
+- **Astro 5** - Static site generation and routing
+- **TypeScript 5** - Type-safe development
+- **React 19** - Interactive components
+- **Tailwind 4** - Utility-first styling
 
-Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+## Key Features
 
-Features:
+- **AI-Powered Generation** - Generate flashcards from text (1,000-10,000 characters) using LLM
+- **Manual Creation** - Create and edit flashcards manually
+- **Spaced Repetition** - Built-in learning algorithm for optimal retention
+- **User Management** - Secure authentication with full data privacy (GDPR compliant)
+- **Telemetry** - Track AI-generated content acceptance rates
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-- ✅ Built-in Observability logging
+## Screenshots
 
-<!-- dash-content-end -->
+![Flashcard Generation](screenshots/Screenshot%202025-12-15%20at%2003.31.19.png)
+![Flashcard Review](screenshots/Screenshot%202025-12-15%20at%2003.31.57.png)
+![Learning Session](screenshots/Screenshot%202025-12-15%20at%2003.32.21.png)
 
 ## Getting Started
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/astro-blog-starter-template
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
 ```
 
-A live public deployment of this template is available at [https://astro-blog-starter-template.templates.workers.dev](https://astro-blog-starter-template.templates.workers.dev)
+## Project Structure
 
-## 🚀 Project Structure
+```
+./src
+├── layouts/          # Astro layouts
+├── pages/           # Astro pages and API routes
+│   └── api/        # API endpoints
+├── components/      # React and Astro components
+└── assets/          # Static internal assets
+./public/            # Public assets
+```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Development Guidelines
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+See [CLAUDE.md](./CLAUDE.md) for detailed development guidelines and coding standards.
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+## Documentation
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                           | Action                                           |
-| :-------------------------------- | :----------------------------------------------- |
-| `npm install`                     | Installs dependencies                            |
-| `npm run dev`                     | Starts local dev server at `localhost:4321`      |
-| `npm run build`                   | Build your production site to `./dist/`          |
-| `npm run preview`                 | Preview your build locally, before deploying     |
-| `npm run astro ...`               | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help`         | Get help using the Astro CLI                     |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare        |
-| `npm wrangler tail`               | View real-time logs for all Workers              |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+Full product specification available in [PRD](./.ai/prd.md) (Polish).
