@@ -3,7 +3,16 @@ import Layout from '../layouts/Layout.astro';
 import { getSessions } from '../lib/storage';
 import { AuthNav } from '../components/AuthNav';
 
+// Debug: Check if user is authenticated
+const user = Astro.locals.user;
+console.log('[DEBUG sesje.astro] User:', user?.email, 'ID:', user?.id);
+
 const sessions = await getSessions();
+console.log('[DEBUG sesje.astro] Sessions count:', sessions.length);
+console.log('[DEBUG sesje.astro] Sessions:', sessions);
+
+// Disable caching for this page
+Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
 ---
 
 <Layout title="Sesje - 10x FlashCards">

@@ -169,12 +169,15 @@ export async function createSession(name: string): Promise<Session> {
 export async function getSessions(): Promise<Session[]> {
     try {
         const userId = await getCurrentUserId();
+        console.log('[DEBUG getSessions] userId:', userId);
 
         if (!userId) {
+            console.log('[DEBUG getSessions] No userId, returning empty array');
             // Return empty array if not authenticated
             return [];
         }
 
+        console.log('[DEBUG getSessions] Fetching sessions for user:', userId);
         const { data, error } = await supabaseClient
             .from('sessions')
             .select(
