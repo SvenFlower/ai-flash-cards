@@ -74,7 +74,7 @@
     "check": "astro build && tsc && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "astro dev --host",
-    "dev:e2e": "cp .env.e2e .env.test && astro dev --host",
+    "dev:e2e": "node scripts/setup-e2e-env.js && astro dev --host",
     "preview": "astro build && wrangler dev",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
