@@ -1,17 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TextInput } from './TextInput';
 import { FlashCardList } from './FlashCardList';
-import { SavedFlashCards } from './SavedFlashCards';
 import { SessionModal } from './SessionModal';
 import { AuthNav } from './AuthNav';
 import { generateFlashCards } from '../lib/openrouter';
-import { saveFlashCard, getFlashCards, deleteFlashCard, saveFlashCardsToSession } from '../lib/storage';
-import type { FlashCardWithStatus, FlashCard } from '../lib/types.ts';
+import { saveFlashCard, saveFlashCardsToSession } from '../lib/storage';
+import type { FlashCardWithStatus } from '../lib/types.ts';
 
 export function FlashCardApp() {
     const [inputText, setInputText] = useState('');
     const [generatedFlashCards, setGeneratedFlashCards] = useState<FlashCardWithStatus[]>([]);
-    const [savedFlashCards, setSavedFlashCards] = useState<FlashCard[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
@@ -25,13 +23,6 @@ export function FlashCardApp() {
         return `Sesja ${year}-${month}-${day}`;
     };
 
-    useEffect(() => {
-        const loadFlashCards = async () => {
-            const flashCards = await getFlashCards();
-            setSavedFlashCards(flashCards);
-        };
-        loadFlashCards();
-    }, []);
 
     const handleGenerate = async () => {
         setError(null);
@@ -62,15 +53,6 @@ export function FlashCardApp() {
                     : fc,
             ),
         );
-
-        try {
-            await saveFlashCard({ front, back });
-            const flashCards = await getFlashCards();
-            setSavedFlashCards(flashCards);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : 'Błąd przy zapisie';
-            setError(message);
-        }
     };
 
     const handleReject = (id: string) => {
@@ -81,16 +63,6 @@ export function FlashCardApp() {
         );
     };
 
-    const handleDeleteSaved = async (id: string) => {
-        try {
-            await deleteFlashCard(id);
-            const flashCards = await getFlashCards();
-            setSavedFlashCards(flashCards);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : 'Błąd przy usuwaniu';
-            setError(message);
-        }
-    };
 
     const handleSaveToSession = () => {
         setIsSessionModalOpen(true);
@@ -164,35 +136,26 @@ export function FlashCardApp() {
                     <p className="text-gray-600">Generuj fiszki edukacyjne za pomocą AI</p>
                 </div>
 
-                <div className="grid gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
-                        <div className="mb-6">
-                            <TextInput
-                                value={inputText}
-                                onChange={setInputText}
-                                onGenerate={handleGenerate}
-                                isLoading={isLoading}
-                                error={error}
-                            />
-                        </div>
-
-                        {generatedFlashCards.length > 0 && (
-                            <FlashCardList
-                                flashCards={generatedFlashCards}
-                                onAccept={handleAccept}
-                                onReject={handleReject}
-                                onSaveToSession={handleSaveToSession}
-                                isLoading={isLoading}
-                            />
-                        )}
-                    </div>
-
-                    <div>
-                        <SavedFlashCards
-                            flashCards={savedFlashCards}
-                            onDelete={handleDeleteSaved}
+                <div className="max-w-4xl mx-auto">
+                    <div className="mb-6">
+                        <TextInput
+                            value={inputText}
+                            onChange={setInputText}
+                            onGenerate={handleGenerate}
+                            isLoading={isLoading}
+                            error={error}
                         />
                     </div>
+
+                    {generatedFlashCards.length > 0 && (
+                        <FlashCardList
+                            flashCards={generatedFlashCards}
+                            onAccept={handleAccept}
+                            onReject={handleReject}
+                            onSaveToSession={handleSaveToSession}
+                            isLoading={isLoading}
+                        />
+                    )}
                 </div>
             </div>
 
