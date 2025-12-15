@@ -113,8 +113,14 @@ export function FlashCardApp() {
             setGeneratedFlashCards([]);
             setIsSessionModalOpen(false);
 
-            // Show success message
-            alert(`Sesja "${sessionName}" została zapisana z ${acceptedFlashCards.length} fiszkami!`);
+            // Show success message and optionally redirect to sessions page
+            const goToSessions = confirm(
+                `Sesja "${sessionName}" została zapisana z ${acceptedFlashCards.length} fiszkami!\n\nCzy chcesz przejść do listy sesji?`
+            );
+
+            if (goToSessions) {
+                window.location.href = '/sesje';
+            }
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Błąd przy zapisywaniu sesji';
             setError(message);
@@ -140,6 +146,7 @@ export function FlashCardApp() {
                                 </a>
                                 <a
                                     href="/sesje"
+                                    data-astro-reload
                                     className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                                 >
                                     Sesje
