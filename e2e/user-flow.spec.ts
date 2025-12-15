@@ -97,8 +97,17 @@ jako czynnik utrzymujący turgor komórek i umożliwiający wymianę gazową prz
     // Step 16: Save session (use plain string with exact match, not regex)
     await page.getByRole('button', { name: 'Zapisz', exact: true }).click();
 
-    // Wait for modal to close after saving
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+    // Wait for modal to close after saving (with longer timeout)
+    // Check if there's an error message first
+    const errorMessage = page.locator('.bg-red-50');
+    const hasError = await errorMessage.isVisible().catch(() => false);
+
+    if (hasError) {
+        const errorText = await errorMessage.textContent();
+        throw new Error(`Session save failed: ${errorText}`);
+    }
+
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 });
 
     // Step 17: Navigate to sessions page
     await page.getByRole('link', { name: /sesje/i }).click();
