@@ -37,6 +37,7 @@ export default defineConfig({
       ...e2eEnv,
     },
     url: 'http://localhost:4321',
-    reuseExistingServer: !process.env.CI,
+    // Don't reuse existing server - we need fresh server with e2e env vars
+    reuseExistingServer: false,
   },
 });
