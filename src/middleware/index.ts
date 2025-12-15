@@ -18,8 +18,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Create server-side Supabase client that can read/write cookies
   const supabase = createServerClient<Database>(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+    import.meta.env.SUPABASE_URL,
+    import.meta.env.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(key) {
@@ -38,13 +38,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Add Supabase client to context
   context.locals.supabase = supabase;
 
-  // Get auth session and user from cookies
+  // Get authenticated user (validates with Supabase Auth server)
+  // Using getUser() instead of getSession() for security - it authenticates the token
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Get session for backward compatibility (if needed)
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   context.locals.session = session;
-  context.locals.user = session?.user ?? null;
+  context.locals.user = user;
 
   return next();
 });
