@@ -211,6 +211,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { data: flashcard, error } = await locals.supabase
       .from('flash_cards')
       .insert({
+        user_id: locals.user.id,
         session_id,
         front,
         back,
