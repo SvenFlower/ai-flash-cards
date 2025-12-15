@@ -3,9 +3,9 @@ import { TextInput } from './TextInput';
 import { FlashCardList } from './FlashCardList';
 import { SessionModal } from './SessionModal';
 import { AuthNav } from './AuthNav';
-import { generateFlashCards } from '../lib/openrouter';
 import { saveFlashCard, saveFlashCardsToSession } from '../lib/storage';
 import type { FlashCardWithStatus } from '../lib/types.ts';
+import type { GenerateFlashCardsResponse } from '../lib/api-types';
 
 export function FlashCardApp() {
     const [inputText, setInputText] = useState('');
@@ -29,7 +29,26 @@ export function FlashCardApp() {
         setIsLoading(true);
 
         try {
-            const flashCards = await generateFlashCards(inputText);
+            // Call the new server-side API endpoint instead of direct OpenRouter call
+            const response = await fetch('/api/flashcards/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: inputText }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.error?.message ||
+                    `Błąd generowania fiszek (${response.status})`
+                );
+            }
+
+            const data: GenerateFlashCardsResponse = await response.json();
+            const flashCards = data.flashcards;
+
             const withStatus = flashCards.map((fc) => ({
                 ...fc,
                 id: Math.random().toString(36).substring(7),

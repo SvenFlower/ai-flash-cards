@@ -16,8 +16,7 @@ declare namespace App {
 interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_URL: string;
   readonly PUBLIC_SUPABASE_ANON_KEY: string;
-  readonly OPENROUTER_API_KEY: string;
-  readonly PUBLIC_OPENROUTER_API_KEY: string;
+  readonly OPENROUTER_API_KEY: string;  // Server-side only
   readonly E2E_USER: string;
   readonly E2E_USER_2: string;
   readonly E2E_PASS: string;
