@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, logout, type AuthUser } from '../lib/auth';
+import type { AuthUser, MeResponse, LogoutResponse } from '../lib/api-types';
 
 export function AuthNav() {
     const [user, setUser] = useState<AuthUser | null>(null);
@@ -7,17 +7,40 @@ export function AuthNav() {
 
     useEffect(() => {
         const loadUser = async () => {
-            const currentUser = await getCurrentUser();
-            setUser(currentUser);
-            setIsLoading(false);
+            try {
+                const response = await fetch('/api/auth/me');
+
+                if (response.ok) {
+                    const data: MeResponse = await response.json();
+                    setUser(data.user);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Failed to load user:', error);
+                setUser(null);
+            } finally {
+                setIsLoading(false);
+            }
         };
         loadUser();
     }, []);
 
     const handleLogout = async () => {
         try {
-            await logout();
-            window.location.href = '/';
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                window.location.href = '/';
+            } else {
+                const errorData = await response.json();
+                console.error('Logout failed:', errorData.error?.message);
+            }
         } catch (error) {
             console.error('Logout error:', error);
         }

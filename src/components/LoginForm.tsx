@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { login } from '../lib/auth';
+import type { LoginResponse } from '../lib/api-types';
 
 export function LoginForm() {
     const [email, setEmail] = useState('');
@@ -20,14 +20,25 @@ export function LoginForm() {
         setIsLoading(true);
 
         try {
-            const { user, error: authError } = await login(email, password);
+            // Call new API endpoint
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-            if (authError) {
-                setError(authError.message);
-                return;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.error?.message || `Błąd logowania (${response.status})`
+                );
             }
 
-            if (user) {
+            const data: LoginResponse = await response.json();
+
+            if (data.user) {
                 // Redirect to home page
                 window.location.href = '/';
             }

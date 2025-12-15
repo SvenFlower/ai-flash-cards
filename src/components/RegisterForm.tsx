@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { register } from '../lib/auth';
+import type { RegisterResponse } from '../lib/api-types';
 
 export function RegisterForm() {
     const [email, setEmail] = useState('');
@@ -20,8 +20,8 @@ export function RegisterForm() {
             return;
         }
 
-        if (password.length < 6) {
-            setError('Hasło musi mieć minimum 6 znaków');
+        if (password.length < 8) {
+            setError('Hasło musi mieć minimum 8 znaków');
             return;
         }
 
@@ -33,14 +33,25 @@ export function RegisterForm() {
         setIsLoading(true);
 
         try {
-            const { user, error: authError } = await register(email, password);
+            // Call new API endpoint
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-            if (authError) {
-                setError(authError.message);
-                return;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.error?.message || `Błąd rejestracji (${response.status})`
+                );
             }
 
-            if (user) {
+            const data: RegisterResponse = await response.json();
+
+            if (data.user) {
                 setSuccess(true);
                 // Redirect to login after 2 seconds
                 setTimeout(() => {
@@ -99,10 +110,10 @@ export function RegisterForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Minimum 6 znaków"
+                    placeholder="Minimum 8 znaków"
                     disabled={isLoading}
                     required
-                    minLength={6}
+                    minLength={8}
                 />
             </div>
 
@@ -122,7 +133,7 @@ export function RegisterForm() {
                     placeholder="Powtórz hasło"
                     disabled={isLoading}
                     required
-                    minLength={6}
+                    minLength={8}
                 />
             </div>
 
